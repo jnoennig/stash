@@ -5,6 +5,10 @@ from __future__ import print_function
 import sys
 import argparse
 import requests
+import urllib3
+
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
 
 from six.moves.urllib.parse import urlparse
 
@@ -39,6 +43,12 @@ def main(args):
                  'HEAD'],
         help='specify request method to use (default to GET)'
     )
+    ap.add_argument(
+        '-k',
+        '--insecure',
+        action='store_false',
+        help='Skips the TLS verification step'
+    )
     ap.add_argument('-H', '--header', help='Custom header to pass to server (H)')
     ap.add_argument('-d', '--data', help='HTTP POST data (H)')
 
@@ -55,20 +65,23 @@ def main(args):
         r = requests.get(
             url,
             headers=headers,
-            allow_redirects=ns.location
+            allow_redirects=ns.location,
+            verify=ns.insecure
         )
     elif ns.request_method == 'POST':
         r = requests.post(
             url,
             data=ns.data,
             headers=headers,
-            allow_redirects=ns.location
+            allow_redirects=ns.location,
+            verify=ns.insecure
         )
     elif ns.request_method == 'HEAD':
         r = requests.head(
             url,
             headers=headers,
-            allow_redirects=ns.location
+            allow_redirects=ns.location,
+            verify=ns.insecure
         )
     else:
         print('unknown request method: {}'.format(ns.request_method))

@@ -17,6 +17,15 @@ try:
 except ImportError:
     clipboard = None
 
+def print_response_headers(r):
+    '''
+    Prints response headers
+    '''
+    print('Status: {}'.format(r.status_code))
+    for k, v in r.headers.items():
+        print('{}: {}'.format(k, v))
+    print('')
+    
 
 def main(args):
     ap = argparse.ArgumentParser()
@@ -49,6 +58,11 @@ def main(args):
         action='store_false',
         help='Skips the TLS verification step'
     )
+    ap.add_argument(
+        '-I',
+        action='store_true',
+        help='Returns headers'
+    )
     ap.add_argument('-H', '--header', help='Custom header to pass to server (H)')
     ap.add_argument('-d', '--data', help='HTTP POST data (H)')
 
@@ -76,7 +90,7 @@ def main(args):
             allow_redirects=ns.location,
             verify=ns.insecure
         )
-    elif ns.request_method == 'HEAD':
+    elif ns.request_method == 'HEAD' or ns.I == True:
         r = requests.head(
             url,
             headers=headers,
@@ -97,11 +111,13 @@ def main(args):
         with open(filename, 'wb') as outs:
             outs.write(r.content)
     else:
-        if ns.request_method == 'HEAD':
-            print('Status: {}'.format(r.status_code))
-            for k, v in r.headers.items():
-                print('{}: {}'.format(k, v))
-            print('')
+        if ns.request_method == 'HEAD' or ns.I == True:
+            if len(r.history) == 0:
+                print_response_headers(r)
+            else:
+                for resp in r.history:
+                    print_response_headers(resp)
+                print_response_headers(r)       
         else:
             print(r.text)
 
